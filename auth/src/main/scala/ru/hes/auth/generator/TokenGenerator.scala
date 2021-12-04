@@ -44,7 +44,7 @@ object TokenGenerator {
      * or
      *  SHA-256 hash of (username + current time + random token generator) as token, 256 bits, 64 characters
      */
-  def generateSHAToken(): IO[String] =  IO {
-    sha("" + System.nanoTime() + generateToken(TOKEN_LENGTH))
+  def generateSHAToken(prefix: String): IO[String] =  IO {
+    prefix + "-" + sha("" + System.nanoTime() + generateToken(TOKEN_LENGTH))
   }
 }

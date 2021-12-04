@@ -49,7 +49,8 @@ class AuthRoutes(authService: AuthService[IO]) {
   val check =
     endpoint
       .get
-      .in("check")
+      .in("auth")
+      .in(header[String]("Authorization"))
       .out(stringBody)
       .serverLogicSuccess(_ => IO{"access"})
 

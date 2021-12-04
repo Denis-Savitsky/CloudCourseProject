@@ -36,6 +36,8 @@ object Dependencies {
 
   lazy val slf4j = Seq("org.slf4j" % "slf4j-api" % "1.7.32")
 
+  lazy val enumeratum = Seq("com.beachape" %% "enumeratum-circe" % "1.7.0")
+
 
   lazy val authDependencies =
     tapir4cats ++
@@ -45,7 +47,8 @@ object Dependencies {
       derevo ++
       logback ++
       slf4j ++
-      swagger
+      swagger ++
+      enumeratum
 
 
 }
