@@ -41,6 +41,9 @@ lazy val shortener = (project in file("shortener"))
     libraryDependencies ++= Dependencies.authDependencies
   )
   .settings(
+    addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
+  )
+  .settings(
     scalacOptions += "-Ymacro-annotations"
   )
   .settings(
