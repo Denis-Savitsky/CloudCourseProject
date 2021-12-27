@@ -1,10 +1,15 @@
 package ru.hes.auth.generator
 
 import cats.effect.IO
+import zio._
 
 import java.security.{MessageDigest, SecureRandom}
 
-object TokenGenerator {
+trait TokenGenerator {
+  def generateSHAToken(prefix: String): UIO[String]
+}
+
+class TokenGeneratorImpl extends TokenGenerator{
   val TOKEN_LENGTH = 45	// TOKEN_LENGTH is not the return size from a hash,
   // but the total characters used as random token prior to hash
   // 45 was selected because System.nanoTime().toString returns
@@ -44,7 +49,11 @@ object TokenGenerator {
      * or
      *  SHA-256 hash of (username + current time + random token generator) as token, 256 bits, 64 characters
      */
-  def generateSHAToken(prefix: String): IO[String] =  IO {
+  def generateSHAToken(prefix: String): UIO[String] =  ZIO.succeed {
     prefix + "-" + sha("" + System.nanoTime() + generateToken(TOKEN_LENGTH))
   }
+}
+
+object TokenGeneratorLive {
+  val layer: ULayer[Has[TokenGenerator]] = ZLayer.succeed(new TokenGeneratorImpl)
 }

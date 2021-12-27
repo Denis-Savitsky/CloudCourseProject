@@ -3,13 +3,17 @@ import sbt._
 object Dependencies {
 
   object V {
-    val tapir = "0.19.0-M14"
+    val tapir = "0.19.1"
     val r4c = "1.0.0"
     val doobie = "1.0.0-RC1"
-    val logback = "1.2.6"
+    val logback = "1.2.7"
   }
 
-  lazy val tapir4cats = Seq("com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % V.tapir)
+  lazy val tapir4zio = Seq(
+    "com.softwaremill.sttp.tapir" %% "tapir-zio" % "0.19.1",
+    "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server" % "0.19.1"
+  )
+
   lazy val redis4cats = Seq("dev.profunktor" %% "redis4cats-effects" % V.r4c)
   lazy val doobie = Seq(
     "org.tpolecat" %% "doobie-core" % V.doobie,
@@ -24,10 +28,11 @@ object Dependencies {
   lazy val swagger = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % V.tapir,
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % V.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui" % V.tapir
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui" % V.tapir,
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir
   )
 
-  lazy val derevo = Seq("tf.tofu" %% "derevo-circe" % "0.12.6")
+  lazy val derevo = Seq("tf.tofu" %% "derevo-circe" % "0.12.7")
 
   lazy val logback = Seq(
     "ch.qos.logback" % "logback-classic" % V.logback % Runtime,
@@ -38,17 +43,19 @@ object Dependencies {
 
   lazy val enumeratum = Seq("com.beachape" %% "enumeratum-circe" % "1.7.0")
 
+  lazy val mouse = Seq("org.typelevel" %% "mouse" % "1.0.7")
+
 
   lazy val authDependencies =
-    tapir4cats ++
+    tapir4zio ++
       redis4cats ++
-      doobie ++
       `tapir-circe` ++
       derevo ++
       logback ++
       slf4j ++
       swagger ++
-      enumeratum
+      enumeratum ++
+      mouse
 
 
 }

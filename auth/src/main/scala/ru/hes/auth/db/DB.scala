@@ -1,35 +1,50 @@
 package ru.hes.auth.db
 
 import cats.effect.IO
-import doobie.free.connection
-import doobie.implicits.toSqlInterpolator
-import doobie.util.transactor.Transactor
-import doobie.syntax.connectionio._
 
-object DB {
+import io.getquill.{PostgresJAsyncContext, SnakeCase}
+import zio.{Task, ZIO}
+import scala.concurrent.ExecutionContext
 
-  lazy val xa = Transactor.fromDriverManager[IO](
-    "org.postgresql.Driver",
-    "",
-    "user",
-    "pass"
-  )
+trait DB {
+  def searchCredentials(login: String): Task[Option[CredentialInfo]]
 
-  def searchCredentials(login: String) =
-    sql"""select * from public.creds c
-         where c = $login
-       """.query[CredentialInfo].option.transact(xa)
+  def addUserWithChecking(login: String, password: String): Task[CredentialInfo]
+}
 
-  def addUserWithChecking(login: String, password: String) =
-    (for {
-      existing <- sql"""select * from public.creds c where c = $login""".query[CredentialInfo].option
+class DBImpl(override val ctx: PostgresJAsyncContext[SnakeCase.type])(implicit ec: ExecutionContext) extends DB with Queries {
+
+  import ctx._
+
+  override def searchCredentials(login: String): Task[Option[CredentialInfo]] = {
+    ZIO.fromFuture { _ =>
+      ctx.run(quote {
+        (for {
+          cred <- creds if cred.login == lift(login)
+        } yield cred).take(1)
+      }).map(_.headOption)
+    }
+  }
+
+  override def addUserWithChecking(login: String, password: String): Task[CredentialInfo] =
+    for {
+      existing <- searchCredentials(login)
       res <- existing match {
-        case Some(value) => connection.pure(value)
-        case None => sql"insert into public.creds (login, password) values ($login, $password)"
-          .update
-          .withUniqueGeneratedKeys[CredentialInfo]("id", "login", "password")
+        case Some(value) => Task.succeed(value)
+        case None => ZIO.fromFuture { _ => ctx.run(quote {
+          creds.insert(lift(CredentialInfo(0, login, password))).returningGenerated(r => CredentialInfo(r.id, r.login, r.password))
+        })
+        }
       }
-    } yield res).transact(xa)
+    } yield res
 
+}
+
+object DBLive {
+
+  val layer = (for {
+    implicit0(ec: ExecutionContext) <- ZIO.runtime[Any].map(_.platform.executor.asEC)
+    pg = new PostgresJAsyncContext(SnakeCase, "ru.hes.db")
+  } yield new DBImpl(pg)).toLayer[DB]
 }
 

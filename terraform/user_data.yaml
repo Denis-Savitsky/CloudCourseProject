@@ -1,0 +1,28 @@
+#cloud-config
+debug:
+  verbose: true
+cloud_init_modules:
+ - migrator
+ - seed_random
+ - write-files
+ - growpart
+ - resizefs
+ - set_hostname
+ - update_hostname
+ - update_etc_hosts
+ - users-groups
+ - ssh
+ - runcmd
+users:
+  - name: ubuntu
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+chpasswd:
+  list:
+    - "ubuntu:password"
+  expire: False
+runcmd:
+- apt-get -y update
+- sudo docker run -d -p 8081:8081 --name auth dsavitsky96/auth-service:0.2.2
+- sudo docker run -d -p 8080:8080 --name shortener dsavitsky96/shortener-service:0.2.2

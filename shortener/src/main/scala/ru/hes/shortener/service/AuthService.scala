@@ -16,7 +16,7 @@ class AuthServiceImpl[F[_] : MonadError[*[_], Throwable]: Functor](backend: Sttp
 
   private def request(token: String) = basicRequest
     .header("Authorization", token)
-    .get(uri"localhost:8081/auth")
+    .get(uri"http://127.0.0.1:8081/auth")
     .response(asJson[AuthResponse])
 
   override def auth(token: String): F[Unit] = {
